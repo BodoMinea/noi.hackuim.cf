@@ -3,7 +3,7 @@
 /*
 	Name:       LearningArduino.ino
 	Created:	17.05.2019 10:48:11
-	Author:     DESKTOP-PCJ1ER5\Anca-Maria
+	Author:     Stoleru Vlad-Stefan
 */
 
 // Define User Types below here or use a .h file
