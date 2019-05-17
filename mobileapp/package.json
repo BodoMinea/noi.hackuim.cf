@@ -1,0 +1,13 @@
+{
+  "name": "noi.hackuim.cf.android",
+  "version": "1.0.0",
+  "displayName": "MobileTicketing",
+  "cordova": {
+    "platforms": [
+      "android"
+    ]
+  },
+  "dependencies": {
+    "cordova-android": "~7.0.0"
+  }
+}
