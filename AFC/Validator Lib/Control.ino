@@ -26,8 +26,8 @@
 #include <PN532_SPI.h>
 #include "Validator.h"
 
-/////////////////Y///X//Rs/E/Db4/Db5/Db6/Db7/ss/mp/op
-Validator Tester(16, 2, 2, 3, 4, 7, 8, 9, 10, 5, 6);
+/////////////////Y///X//Rs/E/Db4/Db5/Db6/Db7/ss/mp/op/Btn1/Btn2
+Validator Tester(16, 2, 2, 3, 4, 7, 8, 9, 10, 5, 6, A0, A1);
 
 void setup() {
 	Serial.begin(115120);
