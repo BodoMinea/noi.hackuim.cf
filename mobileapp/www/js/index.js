@@ -3,7 +3,7 @@ var SELECT_APDU_HEADER = '00A40400';
 var SELECT_OK_SW = '9000';
 var UNKNOWN_CMD_SW = '0000';
 var SELECT_APDU = buildSelectApdu(SAMPLE_LOYALTY_CARD_AID);
-var listening = false;
+var listening = false, xtm;
 
 function toPaddedHexString(i) {
     return ("00" + i.toString(16)).substr(-2);
@@ -52,9 +52,11 @@ var app = {
                 var data = hce.util.concatenateBuffers(accountNumberAsBytes, app.okCommand);
 
                 console.log('Sending ' + hce.util.byteArrayToHexString(data));
+                validatedSuccessfully();
                 hce.sendResponse(data);
             } else {
                 console.log('UNKNOWN CMD SW');
+                HCE_error();
                 hce.sendResponse(app.unknownCommand);
             }
         }
@@ -67,5 +69,28 @@ var app = {
     }
 
 };
+
+function validatedSuccessfully(){
+    navigator.vibrate(300);
+    $('#hce_stat').attr('src','card3.gif');
+    xtm = setTimeout(function(){ stopWaiting(); },2500);
+}
+
+function stopWaiting(){
+    $('#hceModal').modal('hide');
+    clearTimeout(xtm);
+}
+
+function validate(){
+    $('#hce_stat').attr('src','card2.gif');
+    $('#hceModal').modal('show');
+    listening = true;
+    navigator.vibrate(10);
+}
+
+function HCE_error(){
+    navigator.vibrate([100,0,500,0,100]);
+    $('#hce_stat').attr('src','failure.png');
+}
 
 app.initialize();

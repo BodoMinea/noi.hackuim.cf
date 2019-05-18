@@ -206,7 +206,7 @@ li .fa {
   <div class="card-body">
     <h5 class="card-title">a</h5>
     <p class="card-text">b</p>
-    <a href="#" class="btn btn-primary"><i class="fa fa-id-card-o" aria-hidden="true"></i> &nbsp;{{string.valid[selectlang]}}</a>
+    <a href="#" class="btn btn-primary" onclick="validate();"><i class="fa fa-id-card-o" aria-hidden="true"></i> &nbsp;{{string.valid[selectlang]}}</a>
   </div>
 </div>
     </div>    
@@ -224,14 +224,32 @@ li .fa {
     </ul>
 </div>
 
-
-
-
     </div>
     <script type="text/javascript" src="https://static.flash-its.eu/assets/angular.js"></script>
     <script type="text/javascript" src="cordova.js"></script>
     <script type="text/javascript" src="js/index.js"></script>
     <script type="text/javascript" src="js/common.js"></script>
+
+
+<div class="modal fade" id="hceModal" tabindex="-1" role="dialog" aria-labelledby="hceModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="hceModalLabel"><i class="fa fa-user-plus" aria-hidden="true"></i> {{string.main2[selectlang]}}</h5>
+        <button type="button" class="close" onclick="stopWaiting();" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <center>
+        <img src="card2.gif" id="hce_stat" style="width: 90%;"></center>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-danger" onclick="stopWaiting();"><i class="fa fa-times" aria-hidden="true"></i> {{string.cancel[selectlang]}}</button>
+      </div>
+    </div>
+  </div>
+</div>
 
     <script type="text/javascript">
     var controller = new slidebars();

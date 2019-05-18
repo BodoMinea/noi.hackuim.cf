@@ -101,6 +101,7 @@ app.controller('main', function ($scope, $http, $window) {
         "done2":["Finalizați fără card","Finish without card"],
         "menu":["Meniu","Menu"],
         "main":["Situația contului","Account overview"],
+        "main2":["Apropiați telefonul de validator","Bring your phone close to the validator"],
         "valid":["Validare titlu de călătorie","Validate your travel ticket"]
     };
 });
