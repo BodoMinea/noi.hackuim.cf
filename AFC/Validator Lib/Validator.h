@@ -1,10 +1,9 @@
 #pragma once
 
 #include <PololuHD44780.h>
-#include <require_cpp11.h>
-#include <MFRC522Extended.h>
-#include <MFRC522.h>
-#include <deprecated.h>
+#include <SPI.h>
+#include <PN532.h>
+#include <PN532_SPI.h>
 
 const String WelcomeMessage = "Dani Mocanu va ureaza o zi frumoasa! Multumim ca ati ales DM Trans!";
 const String ReadingMessage = "Se citeste cardul...";
@@ -15,7 +14,8 @@ const String IdleMessage = "Apropiati cardul!";
 
 class Validator {
 	PololuHD44780 Display;
-	MFRC522Extended CardReader;
+	PN532_SPI SPIRoot;
+	PN532 CardReader;
 	String lastUID;
 	String validatedCards[50];
 	uint8_t nr, rows, columns;
@@ -24,14 +24,14 @@ public:
 
 	/*Creates a Pololu HD LCD that resembles a Card Validator*/
 	Validator(uint8_t maxY, uint8_t maxX, uint8_t rs, uint8_t e, uint8_t db4, uint8_t db5,
-		uint8_t db6, uint8_t db7, uint8_t ss_pin, uint8_t rst_pin) : Display(rs, e, db4, db5, db6, db7), CardReader(ss_pin, rst_pin), nr(0), rows(maxX), columns(maxY) {}
+		uint8_t db6, uint8_t db7, uint8_t ss) : Display(rs, e, db4, db5, db6, db7), SPIRoot(SPI, ss), CardReader(SPIRoot), nr(0), rows(maxX), columns(maxY) {}
 
-	void initialize() { displayMessage(IdleMessage); CardReader.PCD_Init(); }
+	void initialize() { Display.init(); displayMessage(IdleMessage); SPI.begin();  CardReader.begin(); CardReader.SAMConfig(); 	Serial.println("Initialized Validator!"); }
 
 	void clearScreen() { Display.clear(); }
 
 	/*Shift the on-screen text _positions_ cells to the left*/
-	void shiftLeft(uint8_t positions = 1) {	for (uint8_t pos = 0; pos < positions; pos++) { Display.scrollDisplayLeft(); delay(300); } }
+	void shiftLeft(uint8_t positions = 1) { for (uint8_t pos = 0; pos < positions; pos++) { Display.scrollDisplayLeft(); delay(300); } }
 
 	/*Shift the on-screen text _positions_ cells to the right*/
 	void shiftRight(uint8_t positions = 1) { for (uint8_t pos = 0; pos < positions; pos++) { Display.scrollDisplayRight(); delay(200); } }
@@ -129,49 +129,84 @@ public:
 	}*/
 
 	/*Obtains the last card UID, if existent*/
-	String getLastUID() const {
+	String getStringUID(uint8_t uid[], uint8_t length) const {
 		String UID = "";
-		for (byte i = 0; i < CardReader.uid.size; i++) {
-			UID.concat(String(CardReader.uid.uidByte[i] < 0x10 ? " 0" : " "));
-			UID.concat(String(CardReader.uid.uidByte[i], HEX));
+		for (uint8_t i = 0; i < length; i++) {
+			UID.concat(String(uid[i] < 0x10 ? " 0" : " "));
+			UID.concat(String(uid[i], HEX));
 		}
 		return UID;
 	}
 
-	bool alreadyValidated(String Checked) {
+	/*Checks whether the UID is already contained*/
+	bool alreadyValidated(String UID) {
 		displayMessage(ReadingMessage);
-		delay(2000);
+		delay(1500);
 		for (uint8_t i = 0; i < nr; ++i)
-			if (validatedCards[i] == Checked)
+			if (validatedCards[i] == UID)
 				return true;
 		return false;
 	}
 
 	/*Checks the reader for cards. Displays the card UID if one is found*/
 	void checkReader() {
-		if (!CardReader.PICC_IsNewCardPresent() || !CardReader.PICC_ReadCardSerial())
+		boolean success;
+		uint8_t uid[7];
+		uint8_t uidLength;
+		success = CardReader.readPassiveTargetID(PN532_MIFARE_ISO14443A, uid, &uidLength);
+		if (!success)
 			return;
-		String UID = getLastUID();
-		UID.toUpperCase();
-		//Serial.println(UID);
-		if (!alreadyValidated(UID)) {
-			//Serial.println("Validated " + UID);
-			validatedCards[nr++] = UID;
-			displayMessage(SuccessMessage);
+		if (success < 0) {
+			Serial.println("Failed to read card!");
+			displayMessage(FailureMessage);
+			delay(200);
+			return;
+		}
+		Serial.println("Found card!");
+		uint8_t selectApdu[] = { 0x00, /* CLA */
+							  0xA4, /* INS */
+							  0x04, /* P1  */
+							  0x00, /* P2  */
+							  0x07, /* Length of AID  */
+							  0xF0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, /* AID defined on Android App */
+							  0x00  /* Le  */ };
+
+		uint8_t response[32], responseLength = 32;
+		success = CardReader.inDataExchange(selectApdu, sizeof(selectApdu), response, &responseLength);
+		if (success) {
+			Serial.print("responseLength: "); Serial.println(responseLength);
+			CardReader.PrintHexChar(response, responseLength);
+			do {
+				uint8_t apdu[] = { 'H', 'e', 'l', 'l', 'o', 'f', 'r', 'o', 'm', 'A', 'r', 'd', 'u', 'i', 'n', 'o', '!' };
+				uint8_t back[32];
+				uint8_t length = 32;
+				success = CardReader.inDataExchange(apdu, sizeof(apdu), back, &length);
+				if (success) {
+					Serial.print("responseLength: "); Serial.println(length);
+					CardReader.PrintHexChar(back, length);
+				}
+				else {
+					Serial.println("Broken connection?");
+				}
+			} while (success);
 		}
 		else {
-			//Serial.println("Already registered " + UID);
-			displayMessage(RepeatedMessage);
+			String UID = getStringUID(uid, uidLength);
+			UID.toUpperCase();
+			//Serial.println(UID);
+			if (!alreadyValidated(UID)) {
+				Serial.println(("Validated " + UID) + "!");
+				validatedCards[nr++] = UID;
+				displayMessage(SuccessMessage);
+			}
+			else {
+				Serial.println(("Already registered " + UID) + "!");
+				displayMessage(RepeatedMessage);
+			}
+			//while (CardReader.readPassiveTargetID(PN532_MIFARE_ISO14443A, &uid[0], &uidLength));
+			delay(2000);
+			displayMessage(IdleMessage);
 		}
-		/*if (lastUID != UID) {
-			displayMessage(SuccessMessage);
-			lastUID = UID;
-		}
-		else {
-			displayMessage(RepeatedMessage);
-		}*/
-		delay(3000);
-		displayMessage(IdleMessage);
 	}
 
 	~Validator() {}

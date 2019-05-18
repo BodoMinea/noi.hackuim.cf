@@ -3,7 +3,7 @@
 /*
 	Name:       LearningArduino.ino
 	Created:	17.05.2019 10:48:11
-	Author:     Stoleru Vlad-Stefan
+	Author:     DESKTOP-PCJ1ER5\Anca-Maria
 */
 
 // Define User Types below here or use a .h file
@@ -21,24 +21,19 @@
 
 #include <PololuHD44780.h>
 #include <SPI.h>
-#include <require_cpp11.h>
-#include <MFRC522Extended.h>
-#include <MFRC522.h>
-#include <deprecated.h>
+#include <PN532.h>
+#include <PN532_SPI.h>
 #include "Validator.h"
 
-/////////////////Y///X//Rs/E/Db4/Db5/Db6/Db7/ss/rst
-Validator Tester(16, 2, 2, 3, 4, 7, 8, 9, 9, 10);
+/////////////////Y///X//Rs/E/Db4/Db5/Db6/Db7/ss
+Validator Tester(16, 2, 2, 3, 4, 7, 8, 9, 10);
 
 void setup() {
-	Serial.begin(9600);
-	Serial.println(sizeof(String));
-	SPI.begin();
+	Serial.begin(115120);
 	Tester.initialize();
-	//Serial.println("Scan PICC to see UID and type...");
 }
 
 // Add the main program code into the continuous loop() function
-void loop(){
+void loop() {
 	Tester.checkReader();
 }
