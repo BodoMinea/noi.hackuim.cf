@@ -4,6 +4,7 @@
 #include <SPI.h>
 #include <PN532.h>
 #include <PN532_SPI.h>
+#include "PN532IO.h"
 
 const String WelcomeMessage = "Dani Mocanu va ureaza o zi frumoasa! Multumim ca ati ales DM Trans!";
 const String ReadingMessage = "Se citeste cardul...";
@@ -50,7 +51,7 @@ class Validator {
 		
 	} Bulb;
 	String lastUID;
-	String validatedCards[50];
+	uint32_t validatedCards[50];
 	uint8_t nr, rows, columns;
 public:
 	enum TextAllign { LEFT, CENTER, RIGHT };
@@ -59,15 +60,17 @@ public:
 	Validator(uint8_t maxY, uint8_t maxX, uint8_t rs, uint8_t e, uint8_t db4, uint8_t db5,
 		uint8_t db6, uint8_t db7, uint8_t ss, uint8_t mp, uint8_t op) : Display(rs, e, db4, db5, db6, db7), SPIRoot(SPI, ss), CardReader(SPIRoot), Bulb(mp, op), nr(0), rows(maxX), columns(maxY) {}
 
+	/*Initializez the Validator interface and functions*/
 	void initialize() { Display.init(); displayMessage(IdleMessage); SPI.begin();  CardReader.begin(); CardReader.SAMConfig(); 	CardReader.setPassiveActivationRetries(1); Serial.println("Initialized Validator!"); }
 
-	void clearScreen() { Display.clear(); }
+	/*Clears Display screen*/
+	inline void clearScreen() { Display.clear(); }
 
 	/*Shift the on-screen text _positions_ cells to the left*/
-	void shiftLeft(uint8_t positions = 1) { for (uint8_t pos = 0; pos < positions; pos++) { Display.scrollDisplayLeft(); delay(300); } }
+	inline void shiftLeft(uint8_t positions = 1) { for (uint8_t pos = 0; pos < positions; pos++) { Display.scrollDisplayLeft(); delay(300); } }
 
 	/*Shift the on-screen text _positions_ cells to the right*/
-	void shiftRight(uint8_t positions = 1) { for (uint8_t pos = 0; pos < positions; pos++) { Display.scrollDisplayRight(); delay(200); } }
+	inline void shiftRight(uint8_t positions = 1) { for (uint8_t pos = 0; pos < positions; pos++) { Display.scrollDisplayRight(); delay(200); } }
 
 	/*Fetches the number of the lines on the LCD*/
 	uint8_t get_rows() const { return rows; }
@@ -172,7 +175,7 @@ public:
 	}
 
 	/*Checks whether the UID is already contained*/
-	bool alreadyValidated(String UID) {
+	bool alreadyValidated(uint32_t UID) {
 		displayMessage(ReadingMessage);
 		delay(1500);
 		for (uint8_t i = 0; i < nr; ++i)
@@ -187,7 +190,6 @@ public:
 		success = CardReader.inListPassiveTarget();
 		if (!success)
 			return;
-		Serial.println("Found card!");
 		uint8_t selectApdu[] = { 0x00, /* CLA */
 							  0xA4, /* INS */
 							  0x04, /* P1  */
@@ -195,7 +197,6 @@ public:
 							  0x07, /* Length of AID  */
 							  0xF0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, /* AID defined on Android App */
 							  0x00  /* Le  */ };
-
 		uint8_t response[32], responseLength = 32;
 		success = CardReader.inDataExchange(selectApdu, sizeof(selectApdu), response, &responseLength);
 		if (success) {
@@ -210,6 +211,7 @@ public:
 			uint8_t uid[7];
 			uint8_t uidLength;
 			success = CardReader.readPassiveTargetID(PN532_MIFARE_ISO14443A, uid, &uidLength);
+			
 			if (!success)
 				return;
 			if (success < 0) {
@@ -218,17 +220,45 @@ public:
 				Bulb.setState(LightBulb::RED);
 			}
 			else {
-				String UID = getStringUID(uid, uidLength);
-				UID.toUpperCase();
+				struct Demo {
+					int a;
+					char text[10];
+				};
+
+				Demo d = { 1, "testerino" };
+
+				// TEST WRITE
+				PN532IO CardIO(CardReader, uid, uidLength);
+
+				bool ok = CardIO.WriteBytes(0, &d, sizeof(d));
+				if (ok)
+					Serial.println("o mers ba");
+				else
+					Serial.println("WriteFailed");
+
+
+				delay(1000);
+				// TEST READ
+				ok = CardIO.ReadBytes(0, &d, sizeof(d));
+				if (ok) {
+					Serial.println("Date citite");
+					Serial.println(d.a);
+					Serial.println(d.text);
+				}
+				else
+					Serial.println("ReadFailed");
+
+
+				uint32_t UID = (uint32_t)atoi((const char*)uid);
 				//Serial.println(UID);
 				if (!alreadyValidated(UID)) {
-					Serial.println(("Validated " + UID) + "!");
+					Serial.print("Validated "); Serial.print(UID); Serial.println("!");
 					validatedCards[nr++] = UID;
 					displayMessage(SuccessMessage);
 					Bulb.setState(LightBulb::GREEN);
 				}
 				else {
-					Serial.println(("Already registered " + UID) + "!");
+					Serial.print("Already registered "); Serial.print(UID); Serial.println("!");
 					displayMessage(RepeatedMessage);
 					Bulb.setState(LightBulb::GREEN);
 				}

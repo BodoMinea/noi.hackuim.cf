@@ -19,13 +19,14 @@
 
 // The setup() function runs once each time the micro-controller starts
 
+#include "BaseCardIOInterface.h"
 #include <PololuHD44780.h>
 #include <SPI.h>
 #include <PN532.h>
 #include <PN532_SPI.h>
 #include "Validator.h"
 
-/////////////////Y///X//Rs/E/Db4/Db5/Db6/Db7/ss
+/////////////////Y///X//Rs/E/Db4/Db5/Db6/Db7/ss/mp/op
 Validator Tester(16, 2, 2, 3, 4, 7, 8, 9, 10, 5, 6);
 
 void setup() {
