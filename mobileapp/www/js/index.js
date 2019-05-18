@@ -3,6 +3,7 @@ var SELECT_APDU_HEADER = '00A40400';
 var SELECT_OK_SW = '9000';
 var UNKNOWN_CMD_SW = '0000';
 var SELECT_APDU = buildSelectApdu(SAMPLE_LOYALTY_CARD_AID);
+var listening = false;
 
 function toPaddedHexString(i) {
     return ("00" + i.toString(16)).substr(-2);
@@ -37,24 +38,28 @@ var app = {
     // if the select apdu command is received, the loyalty card data is returned to the reader
     // otherwise unknown command is returned
     onCommand: function(command) {
-        console.log(command);
-        var commandAsBytes = new Uint8Array(command);
-        var commandAsString = hce.util.byteArrayToHexString(commandAsBytes);
+        if(listening){
+            console.log(command);
+            var commandAsBytes = new Uint8Array(command);
+            var commandAsString = hce.util.byteArrayToHexString(commandAsBytes);
 
-        //alert(commandAsString);
-        console.log('received command ' + commandAsString);
-        console.log('expecting        ' + SELECT_APDU);
+            //alert(commandAsString);
+            console.log('received command ' + commandAsString);
+            console.log('expecting        ' + SELECT_APDU);
 
-        if (true) {
-            var accountNumberAsBytes = hce.util.stringToBytes(document.getElementById('senddata').value);
-            var data = hce.util.concatenateBuffers(accountNumberAsBytes, app.okCommand);
+            if (true) {
+                var accountNumberAsBytes = hce.util.stringToBytes(document.getElementById('senddata').value);
+                var data = hce.util.concatenateBuffers(accountNumberAsBytes, app.okCommand);
 
-            console.log('Sending ' + hce.util.byteArrayToHexString(data));
-            hce.sendResponse(data);
-        } else {
-            console.log('UNKNOWN CMD SW');
-            hce.sendResponse(app.unknownCommand);
+                console.log('Sending ' + hce.util.byteArrayToHexString(data));
+                hce.sendResponse(data);
+            } else {
+                console.log('UNKNOWN CMD SW');
+                hce.sendResponse(app.unknownCommand);
+            }
         }
+        
+        listening = false;
 
     },
     onDeactivated: function(reason) {
