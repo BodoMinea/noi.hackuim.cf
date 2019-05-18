@@ -15,7 +15,9 @@
     <script type="text/javascript" src="cordova.js"></script>
     <script type="text/javascript" src="js/index.js"></script>
     <script type="text/javascript" src="js/common.js"></script>
-        <link rel="stylesheet" href="https://static.flash-its.eu/assets/css/font-awesome.min.css"/>
+    <link rel="stylesheet" href="https://static.flash-its.eu/assets/css/font-awesome.min.css"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/zxcvbn/4.2.0/zxcvbn.js"></script>
+
 
     <title>MobileTicketingV1</title>
     <style type="text/css">
@@ -179,7 +181,7 @@ body {
         <form>
   <div class="form-group">
     <label for="exampleFormControlInput1">{{string.name[selectlang]}}</label>
-    <input type="text" class="form-control" id="name" placeholder="{{string.ph_name[selectlang]}}">
+    <input type="text" class="form-control" id="nameinp" placeholder="{{string.ph_name[selectlang]}}">
   </div>
   <div class="form-group">
     <label for="exampleFormControlInput1">{{string.surname[selectlang]}}</label>
@@ -193,6 +195,7 @@ body {
     <label for="exampleFormControlInput1">{{string.pass[selectlang]}}</label>
     <input type="password" class="form-control" id="pass" placeholder="Secret">
   </div>
+  <p id="password-strength"></p>
   <div class="form-group">
     <label for="exampleFormControlInput1">{{string.passconfirm[selectlang]}}</label>
     <input type="password" class="form-control" id="pass2" placeholder="{{string.ree[selectlang]}}">
@@ -228,5 +231,110 @@ body {
   </div>
 </div>
 </body>
+<script type="text/javascript">
+    
+
+    var password = document.getElementById('pass');
+    var password2 = document.getElementById('pass2');
+    var email = document.getElementById('email');
+    var inputEmail = document.getElementById('inputEmail');
+    var text = document.getElementById('password-strength');
+    var nameinp = document.getElementById('nameinp');
+    var surname = document.getElementById('surname');
+
+    nameinp.addEventListener('focusout', function(){
+        if(nameinp.value != ""){
+                $('#nameinp').removeClass('border-danger');
+                $('#nameinp').addClass('border-success');
+            }else{
+                $('#nameinp').removeClass('border-success');
+                $('#nameinp').addClass('border-danger');
+            }
+    });
+
+    surname.addEventListener('focusout', function(){
+        if(surname.value != ""){
+                $('#surname').removeClass('border-danger');
+                $('#surname').addClass('border-success');
+            }else{
+                $('#surname').removeClass('border-success');
+                $('#surname').addClass('border-danger');
+            }
+    });
+
+    email.addEventListener('input', function()
+    {
+        if((/^(([^<>()\[\]\.,;:\s@\"]+(\.[^<>()\[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$/i.test(email.value))){
+                $('#email').removeClass('border-danger');
+                $('#email').addClass('border-success');
+            }else{
+                $('#email').removeClass('border-success');
+                $('#email').addClass('border-danger');
+            }
+    });
+
+    inputEmail.addEventListener('input', function()
+    {
+        if((/^(([^<>()\[\]\.,;:\s@\"]+(\.[^<>()\[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$/i.test(inputEmail.value))){
+                $('#inputEmail').removeClass('border-danger');
+                $('#inputEmail').addClass('border-success');
+            }else{
+                $('#inputEmail').removeClass('border-success');
+                $('#inputEmail').addClass('border-danger');
+            }
+    });
+
+    password2.addEventListener('input', function()
+    {
+        if(password2.value !== "") 
+            if(password2.value==password.value){
+                $('#pass2').removeClass('border-danger');
+                $('#pass2').addClass('border-success');
+            }else{
+                $('#pass2').removeClass('border-success');
+                $('#pass2').addClass('border-danger');
+            }
+    });
+
+    password.addEventListener('input', function()
+    {
+        if(!scope.selectlang){
+            var strength = {
+                0: "<font color='darkred'> Extrem de simplă ☹</font>",
+                1: "<font color='red'> Foarte slabă ☹</font>",
+                2: "<font color='orange'> Slabă ☹</font>",
+                3: "<font color='green'> Bună ☺</font>",
+                4: "<font color='darkgreen'> Excepțională! ☻</font>"
+            }
+        }else{
+            var strength = {
+                0: "<font color='darkred'> Extremely simple ☹</font>",
+                1: "<font color='red'> Very weak ☹</font>",
+                2: "<font color='orange'> Weak-ish ☹</font>",
+                3: "<font color='green'> Okay ☺</font>",
+                4: "<font color='darkgreen'> Excellent! ☻</font>"
+            }
+        }
+
+        var val = password.value;
+        var result = zxcvbn(val);
+
+        if(result.score>=3){
+                $('#pass').removeClass('border-danger');
+                $('#pass').addClass('border-success');
+            }else{
+                $('#pass').removeClass('border-success');
+                $('#pass').addClass('border-danger');
+            }
+
+        // Update the text indicator
+        if(val !== "") {
+            text.innerHTML = "Complexitatea parolei: " + "<strong>" + strength[result.score] + "</strong>" + "<span class='feedback'>" + result.feedback.warning + " " + result.feedback.suggestions + "</span>"; 
+        }
+        else {
+            text.innerHTML = "";
+        }
+    });
+</script>
 
 </html>

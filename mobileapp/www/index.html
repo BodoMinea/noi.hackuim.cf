@@ -16,10 +16,7 @@
 
 <body>
     <div class="app">
-        <h1>MobileTicketingV1</h1>
-        <div id="deviceready" class="blink">
-            <input type="text" name="senddata" id="senddata" value="TEST1"> <button onclick="listening = true;">HAIDE</button>
-        </div>
+        
     </div>
     <script type="text/javascript" src="cordova.js"></script>
     <script type="text/javascript" src="js/index.js"></script>
@@ -27,6 +24,8 @@
     	var authtoken = window.localStorage.getItem("key");
         if(!authtoken){
         	window.location.href = 'auth.html';
+        }else{
+        	window.location.href = 'main.html';
         }
     </script>
 </body>

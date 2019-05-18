@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html ng-app="afcApp" ng-controller="main">
 
 <head>
     <meta charset="utf-8" />
@@ -11,20 +11,228 @@
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
 	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slidebars/2.0.2/slidebars.min.css" integrity="sha256-1aPPvkgjcWOgCVC8EECDnKz/PrlQ0kvdb/BXvTS3W60=" crossorigin="anonymous" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/slidebars/2.0.2/slidebars.min.js" integrity="sha256-9vFNsJlkNq7nLIIwKePcxsw2PsOkZ1cES2tjZAtf8UQ=" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://static.flash-its.eu/assets/css/font-awesome.min.css"/>
     <title>MobileTicketingV1</title>
+    <style type="text/css">
+
+/* line 1, ../sass/_canvas.scss */
+[canvas=container] {
+  margin-top: 0px;
+  height: -webkit-calc( 100% - 0px );
+  height: -moz-calc( 100% - 0px );
+  height: calc( 100% - 0px );
+}
+
+/* line 1, ../sass/_off-canvas.scss */
+[off-canvas] {
+  background-color: #222222;
+}
+[off-canvas] ul.menu li a {
+    color: rgba(255, 255, 255, 0.87);
+    display: block;
+    padding: 20px;
+    height: 20px;
+    background-color: rgba(255, 255, 255, 0);
+    -webkit-transition: all 200ms ease-in-out 0s;
+    transition: all 200ms ease-in-out 0s;
+}
+[off-canvas] ul.menu li a:hover {
+    color: #ff3838;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+[off-canvas] ul.menu {
+    margin: 0;
+    padding: 0;
+    display: block;
+    list-style: none;
+}
+
+/* line 11, ../sass/_buttons.scss */
+button .fa, .button .fa  {
+  top: 0;
+  margin-right: 5px;
+}
+
+.button.red {
+    color: white;
+    border: 0 none;
+    background-color: #ff5252;
+}
+.button.red:hover {
+    background-color: #ff3838;
+}
+.button.purple {
+    color: white;
+    border: 0 none;
+    background-color: #7c4dff;
+}
+.button.purple:hover {
+    background-color: #6933ff;
+}
+.button.blue {
+    color: white;
+    border: 0 none;
+    background-color: #40c4ff;
+}
+.button.blue:hover {
+    background-color: #26bcff;
+}
+.button.paypal {
+    color: white;
+    border: 0 none;
+    background-color: #11559D;
+}
+.button.paypal:hover {
+    background-color: #2997D8;
+}
+.demos-menu {
+    height: 160px;
+    white-space: nowrap;
+    overflow-y: hidden;
+    overflow-x: auto;
+    background-color: #222222;
+}
+.demos-menu .demo-block {
+    display: inline-block;
+    width: 130px;
+    margin: 30px;
+    text-align: center;
+}
+.demos-menu .demo-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 15%;
+    background-color: white;
+    margin: 0 auto;
+}
+.demos-menu .demo-icon .fa {
+    line-height: 56px;
+    top: 0;
+    font-size: 24px;
+}
+.fa {
+    display: inline-block;
+    font: normal normal normal 14px/1 FontAwesome;
+    font-size: inherit;
+    text-rendering: auto;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+.sidebar {
+  margin-top: 10px;
+  padding: 25px 0 5px 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* line 20, ../sass/_typography.scss */
+h1 {
+  font-size: 24px;
+}
+
+/* line 24, ../sass/_typography.scss */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 300;
+}
+
+/* line 28, ../sass/_typography.scss */
+pre {
+  background-color: rgba(0, 0, 0, 0.01);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  color: rgba(0, 0, 0, 0.54);
+  font-size: 85%;
+  padding: 10px;
+  overflow-y: auto;
+  margin: 20px 0;
+}
+/* line 1, ../sass/_lists.scss */
+ul {
+  padding-left: 1em;
+}
+/* line 4, ../sass/_lists.scss */
+ul li {
+  margin-bottom: 5px;
+  list-style:none;
+}
+/* line 8, ../sass/_lists.scss */
+ul.unstyled {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* line 1, ../sass/_font-awesome.scss */
+li .fa {
+  vertical-align: initial;
+  margin-right: 5px;
+}
+
+@media (min-width: 500px) {
+  /* line 90, ../sass/_off-canvas.scss */
+  .custom-responsive-width {
+    width: 50%;
+  }
+}
+@media (min-width: 1000px) {
+  /* line 90, ../sass/_off-canvas.scss */
+  .custom-responsive-width {
+    width: 30%;
+  }
+}
+    </style>
 </head>
 
 <body>
     <div class="app">
-        <h1>MobileTicketingV1</h1>
-        <div id="deviceready" class="blink">
-            <input type="text" name="senddata" id="senddata" value="TEST1"> <button onclick="listening = true;">HAIDE</button>
-        </div>
+        
+
+
+
+<div canvas="container">
+    <div class="content" style="min-height: 50em">
+        <nav class="navbar navbar-light bg-dark">
+  
+  <button class="btn btn-sm btn-outline-secondary button js-toggle-main-menu"><i class="fa fa-bars"></i> {{string.menu[selectlang]}}</button>
+</nav>
+        
+       
     </div>
+</div>
+
+
+<div off-canvas="main-menu left shift" style="margin-left: -255px; display: block; transition-duration: 300ms; transform: translate(255px, 0px);">
+    <ul class="menu small">
+        <li><a href="#"></li>
+        <li><a href="#"></li>
+        <li><a href="#"></li>
+        <li><center style="color: white;"><b><span onclick="changelang('RO')">RO</span> / <span onclick="changelang('EN')">EN</span></b></center></li>
+    </ul>
+</div>
+
+
+
+
+    </div>
+    <script type="text/javascript" src="https://static.flash-its.eu/assets/angular.js"></script>
     <script type="text/javascript" src="cordova.js"></script>
     <script type="text/javascript" src="js/index.js"></script>
+    <script type="text/javascript" src="js/common.js"></script>
+
     <script type="text/javascript">
-        app.initialize();
+    var controller = new slidebars();
+
+    controller.init();
+
+    $( '.js-toggle-main-menu' ).on( 'click', function ( event ) {
+        event.preventDefault();
+        event.stopPropagation();
+        controller.toggle( 'main-menu' );
+    } );
+
+
     </script>
 </body>
 

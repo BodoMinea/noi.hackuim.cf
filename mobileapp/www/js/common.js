@@ -84,8 +84,8 @@ app.controller('main', function ($scope, $http, $window) {
         "email":["Adresă de email","Email address"],
         "pass":["Parola","Parolă"],
         "passconfirm":["Confirmați parola","Confirm your password"],
-        "signin":["Accesați-vă contul","Access your account"],
-        "create":["Creați un cont","Create a new account"],
+        "signin":["Accesați contul","Access your account"],
+        "create":["Creați-vă un cont","Create a new account"],
         "cancel":["Renunță","Cancel"],
         "next":["Următorul pas","Next step"],
         "name":["Nume","Name"],
@@ -95,7 +95,8 @@ app.controller('main', function ($scope, $http, $window) {
         "ph_em":["ion.popescu@yahoo.ro","john.doe@gmail.com"],
         "ree":["Din nou","Again"],
         "scan":["Scanați cardul de călătorie","Scan your travelcard"],
-        "done":["Finalizați","Finish"]
+        "done":["Finalizați","Finish"],
+        "menu":["Meniu","Menu"]
     };
 });
 
