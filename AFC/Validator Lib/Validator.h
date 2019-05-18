@@ -72,7 +72,6 @@ class Validator {
 		void checkState() {
 			if (!Activated) {
 				if (digitalRead(ConnectedPin) == LOW) {
-					Serial.println("Button pushed!");
 					Activated = true;
 					MomentOfActivation = millis() / 1000;
 				}
@@ -80,7 +79,6 @@ class Validator {
 			else {
 				uint16_t currentTime = millis() / 1000;
 				if (currentTime - MomentOfActivation >= ResetTime) {
-					Serial.println("Button idled!");
 					Activated = false;
 					MomentOfActivation = 0;
 				}
@@ -91,6 +89,7 @@ class Validator {
 
 		void setState(bool state) { Activated = state; }
 	}Button1, Button2;
+	bool SpecialState;
 	String lastUID;
 	uint32_t validatedCards[50];
 	uint8_t nr, rows, columns;
@@ -250,27 +249,35 @@ public:
 
 	/*Checks the reader for cards. Displays the card UID if one is found*/
 	void checkReader() {
+		if (Button1.getState() || Button2.getState())
+			SpecialState = true;
 		Button1.checkState();
-		if (Button1.getState()) {
-			if (!Button2.getState()) {
-				displayMessage("Consultare");
-				Bulb.setState(LightBulb::GREEN);
+		if (!Button2.getState()) {
+			if (Button1.getState()) {
+				if (!SpecialState) {
+					displayMessage("Consultare card");
+					Bulb.setState(LightBulb::GREEN);
+				}
 			}
-		}
-		else {
-			displayMessage(IdleMessage);
-			Bulb.setState(LightBulb::IDLE);
+			else {
+				displayMessage(IdleMessage);
+				Bulb.setState(LightBulb::IDLE);
+				SpecialState = false;
+			}
 		}
 		Button2.checkState();
-		if (Button2.getState()) {
-			if (!Button2.getState()) {
-				displayMessage("Validare multipla");
-				Bulb.setState(LightBulb::GREEN);
+		if (!Button1.getState()) {
+			if (Button2.getState()) {
+				if (!SpecialState) {
+					displayMessage("Validare multipla");
+					Bulb.setState(LightBulb::GREEN);
+				}
 			}
-		}
-		else {
-			displayMessage(IdleMessage);
-			Bulb.setState(LightBulb::IDLE);
+			else {
+				displayMessage(IdleMessage);
+				Bulb.setState(LightBulb::IDLE);
+				SpecialState = false;
+			}
 		}
 		boolean success;
 		success = CardReader.inListPassiveTarget();
