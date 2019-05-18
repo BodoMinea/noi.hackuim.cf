@@ -25,19 +25,18 @@
         <icon density="ldpi" src="www/icon.png" />
     </platform>
     <access origin="*" />
-    <allow-intent href="http://*/*" />
+    <allow-navigation href="*://*.api.hackuim.cf/*" />
+    <allow-navigation href="*://*.noi.hackuim.cf/*" />
+    <!-- <allow-intent href="http://*/*" /> -->
     <allow-intent href="https://*/*" />
-    <allow-intent href="tel:*" />
+    <!-- <allow-intent href="tel:*" />
     <allow-intent href="sms:*" />
-    <allow-intent href="mailto:*" />
+    <allow-intent href="mailto:*" /> -->
     <allow-intent href="geo:*" />
+    <!--
     <platform name="android">
         <allow-intent href="market:*" />
-    </platform>
-    <platform name="ios">
-        <allow-intent href="itms:*" />
-        <allow-intent href="itms-apps:*" />
-    </platform>
+    </platform> -->
     <plugin name="cordova-plugin-hce" spec="~1.0.0">
         <variable name="AID_FILTER" value="F0010203040506" />
     </plugin>
