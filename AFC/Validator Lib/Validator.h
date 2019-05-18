@@ -10,16 +10,26 @@ const String WelcomeMessage = "Dani Mocanu va ureaza o zi frumoasa! Multumim ca 
 const String ReadingMessage = "Se citeste cardul...";
 const String SuccessMessage = "Calatorie placuta!";
 const String FailureMessage = "Repetati validarea!";
+const String InvalidMessage = "Card invalid!";
+const String InsufficientFundsMessage = "Fonduri insuficiente!";
 const String RepeatedMessage = "Card deja validat!";
 const String IdleMessage = "Apropiati cardul!";
 const String RetrieveCardMessage = "Retrageti cardul!";
 const String RetrievePhoneMessage = "Retrageti telefonul!";
+uint8_t AppIdentifyCommands[] = { 0x00, /* CLA */
+							  0xA4, /* INS */
+							  0x04, /* P1  */
+							  0x00, /* P2  */
+							  0x07, /* Length of AID  */
+							  0xF0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, /* AID defined on Android App */
+							  0x00  /* Le  */ };
+const float RideFare = 1.3;
 
 class Validator {
 	PololuHD44780 Display;
 	PN532_SPI SPIRoot;
 	PN532 CardReader;
-	class LightBulb{ 
+	class LightBulb {
 		const uint8_t MediumPin, OtherPin;
 	public:
 		enum STATE { IDLE, GREEN, RED };
@@ -48,11 +58,14 @@ class Validator {
 			}
 			}
 		}
-		
+
 	} Bulb;
 	String lastUID;
 	uint32_t validatedCards[50];
 	uint8_t nr, rows, columns;
+	struct CardData {
+		float Sold;
+	};
 public:
 	enum TextAllign { LEFT, CENTER, RIGHT };
 
@@ -164,6 +177,24 @@ public:
 		}
 	}*/
 
+	bool readData(uint8_t uid[], uint8_t length, CardData &data) {
+		PN532IO CardIO(CardReader, uid, length);
+
+		bool ok = CardIO.ReadBytes(0, &data, sizeof(data));
+		if (!ok)
+			return false;
+		return true;
+	}
+
+	bool writeData(uint8_t uid[], uint8_t length, CardData &data) {
+		PN532IO CardIO(CardReader, uid, length);
+
+		bool ok = CardIO.WriteBytes(0, &data, sizeof(data));
+		if (!ok)
+			return false;
+		return true;
+	}
+
 	/*Obtains the last card UID, if existent*/
 	String getStringUID(uint8_t uid[], uint8_t length) const {
 		String UID = "";
@@ -190,15 +221,8 @@ public:
 		success = CardReader.inListPassiveTarget();
 		if (!success)
 			return;
-		uint8_t selectApdu[] = { 0x00, /* CLA */
-							  0xA4, /* INS */
-							  0x04, /* P1  */
-							  0x00, /* P2  */
-							  0x07, /* Length of AID  */
-							  0xF0, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, /* AID defined on Android App */
-							  0x00  /* Le  */ };
 		uint8_t response[32], responseLength = 32;
-		success = CardReader.inDataExchange(selectApdu, sizeof(selectApdu), response, &responseLength);
+		success = CardReader.inDataExchange(AppIdentifyCommands, sizeof(AppIdentifyCommands), response, &responseLength);
 		if (success) {
 			displayMessage(SuccessMessage);
 			Bulb.setState(LightBulb::GREEN);
@@ -211,7 +235,6 @@ public:
 			uint8_t uid[7];
 			uint8_t uidLength;
 			success = CardReader.readPassiveTargetID(PN532_MIFARE_ISO14443A, uid, &uidLength);
-			
 			if (!success)
 				return;
 			if (success < 0) {
@@ -220,42 +243,38 @@ public:
 				Bulb.setState(LightBulb::RED);
 			}
 			else {
-				struct Demo {
-					int a;
-					char text[10];
-				};
-
-				Demo d = { 1, "testerino" };
-
-				// TEST WRITE
-				PN532IO CardIO(CardReader, uid, uidLength);
-
-				bool ok = CardIO.WriteBytes(0, &d, sizeof(d));
-				if (ok)
-					Serial.println("o mers ba");
-				else
-					Serial.println("WriteFailed");
-
-
-				delay(1000);
-				// TEST READ
-				ok = CardIO.ReadBytes(0, &d, sizeof(d));
-				if (ok) {
-					Serial.println("Date citite");
-					Serial.println(d.a);
-					Serial.println(d.text);
-				}
-				else
-					Serial.println("ReadFailed");
-
-
 				uint32_t UID = (uint32_t)atoi((const char*)uid);
 				//Serial.println(UID);
 				if (!alreadyValidated(UID)) {
-					Serial.print("Validated "); Serial.print(UID); Serial.println("!");
-					validatedCards[nr++] = UID;
-					displayMessage(SuccessMessage);
-					Bulb.setState(LightBulb::GREEN);
+					CardData data;
+					bool read = readData(uid, uidLength, data);
+					if (!read) {
+						Serial.println("Failed to read card!");
+						displayMessage(FailureMessage);
+						Bulb.setState(LightBulb::RED);
+					}
+					else {
+						Serial.print("Funds: ");  Serial.println(data.Sold);
+						if (data.Sold < RideFare) {
+							displayMessage(InsufficientFundsMessage);
+							Bulb.setState(LightBulb::RED);
+						}
+						else {
+							data.Sold -= RideFare;
+							bool wrote = writeData(uid, uidLength, data);
+							if (!wrote) {
+								Serial.println("Failed to read card!");
+								displayMessage(FailureMessage);
+								Bulb.setState(LightBulb::RED);
+							}
+							else {
+								Serial.print("Validated "); Serial.print(UID); Serial.println("!");
+								validatedCards[nr++] = UID;
+								displayMessage(SuccessMessage);
+								Bulb.setState(LightBulb::GREEN);
+							}
+						}
+					}
 				}
 				else {
 					Serial.print("Already registered "); Serial.print(UID); Serial.println("!");
