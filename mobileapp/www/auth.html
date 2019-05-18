@@ -155,9 +155,9 @@ body {
                 <label for="inputPassword">{{string.pass[selectlang]}}</label>
               </div>
 
-              <button class="btn btn-lg btn-primary btn-block text-uppercase" type="submit"><i class="fa fa-user-circle-o" aria-hidden="true"></i> {{string.signin[selectlang]}}</button>
+              <button class="btn btn-lg btn-primary btn-block text-uppercase" type="submit" id="subb" disabled="disabled" onclick="sendAuth()"><i class="fa fa-user-circle-o" aria-hidden="true"></i> {{string.signin[selectlang]}}</button>
               <hr class="my-4">
-              <button class="btn btn-lg btn-google btn-block text-uppercase" type="submit" onclick="$('#newaccModal').modal('show');"><i class="fa fa-user-plus" aria-hidden="true"></i> {{string.create[selectlang]}}</button>
+              <button class="btn btn-lg btn-google btn-block text-uppercase" type="submit" onclick="$('#newaccModal').modal('show');setTimeout(function(){$('#nameinp').focus();},200)"><i class="fa fa-user-plus" aria-hidden="true"></i> {{string.create[selectlang]}}</button>
             </form>
           </div>
         </div>
@@ -173,7 +173,7 @@ body {
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="newaccModalLabel"><i class="fa fa-user-plus" aria-hidden="true"></i> {{string.create[selectlang]}}</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+        <button type="button" class="close" onclick="window.location.reload();" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
@@ -203,8 +203,8 @@ body {
 </form>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-danger" data-dismiss="modal"><i class="fa fa-times" aria-hidden="true"></i> {{string.cancel[selectlang]}}</button>
-        <button type="button" class="btn btn-success" onclick="nextStep();"><i class="fa fa-arrow-right" aria-hidden="true"></i> {{string.next[selectlang]}}</button>
+        <button type="button" class="btn btn-danger" onclick="window.location.reload();"><i class="fa fa-times" aria-hidden="true"></i> {{string.cancel[selectlang]}}</button>
+        <button type="button" class="btn btn-success" onclick="nextStep();" disabled="disabled" id="vbtn"><i class="fa fa-arrow-right" aria-hidden="true"></i> {{string.next[selectlang]}}</button>
       </div>
     </div>
   </div>
@@ -215,7 +215,7 @@ body {
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="scanCardModalLabel"><i class="fa fa-user-plus" aria-hidden="true"></i> {{string.scan[selectlang]}}</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+        <button type="button" class="close" onclick="window.location.reload();" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
@@ -224,16 +224,45 @@ body {
         <img src="card.gif" style="width: 90%;"></center>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-danger" data-dismiss="modal"><i class="fa fa-times" aria-hidden="true"></i> {{string.cancel[selectlang]}}</button>
-        <button type="button" class="btn btn-success"><i class="fa fa-arrow-right" aria-hidden="true"></i> {{string.done[selectlang]}}</button>
+        <button type="button" class="btn btn-danger" onclick="window.location.reload();"><i class="fa fa-times" aria-hidden="true"></i> {{string.cancel[selectlang]}}</button>
+        <button type="button" class="btn btn-secondary"><i class="fa fa-arrow-right" aria-hidden="true" onclick="sendNewAcc()"></i> {{string.done2[selectlang]}}</button>
       </div>
     </div>
   </div>
 </div>
 </body>
 <script type="text/javascript">
-    
 
+    function sendAuth(){
+        $.post('https://api.hackuim.cf/authenticate',{ 
+            email: $('#inputEmail').val(),
+            password: $('#inputPassword').val()
+        },function(response){
+            if(response.success) {
+                window.localStorage.setItem("key",response.token);
+                window.location.href = 'main.html';
+            }
+        })
+    }
+
+    cid=null;
+
+    function sendNewAcc(){
+        $.post('https://api.hackuim.cf/signup',{ 
+            username: $('#email').val(),
+            password: $('#pass').val(),
+            name: $('#nameinp').val(),
+            surname: $('#surname').val(),
+            card_id: cid
+        },function(response){
+            if(response.success) {
+                window.localStorage.setItem("key",response.token);
+                window.location.href = 'main.html';
+            }
+        })
+    }
+
+    var hasFailModal = true, hasFailLogin = true;
     var password = document.getElementById('pass');
     var password2 = document.getElementById('pass2');
     var email = document.getElementById('email');
@@ -246,9 +275,11 @@ body {
         if(nameinp.value != ""){
                 $('#nameinp').removeClass('border-danger');
                 $('#nameinp').addClass('border-success');
+                hasFailModal = false;
             }else{
                 $('#nameinp').removeClass('border-success');
                 $('#nameinp').addClass('border-danger');
+                hasFailModal = true;
             }
     });
 
@@ -256,9 +287,11 @@ body {
         if(surname.value != ""){
                 $('#surname').removeClass('border-danger');
                 $('#surname').addClass('border-success');
+                hasFailModal = false;
             }else{
                 $('#surname').removeClass('border-success');
                 $('#surname').addClass('border-danger');
+                hasFailModal = true;
             }
     });
 
@@ -267,9 +300,11 @@ body {
         if((/^(([^<>()\[\]\.,;:\s@\"]+(\.[^<>()\[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$/i.test(email.value))){
                 $('#email').removeClass('border-danger');
                 $('#email').addClass('border-success');
+                hasFailModal = false;
             }else{
                 $('#email').removeClass('border-success');
                 $('#email').addClass('border-danger');
+                hasFailModal = true;
             }
     });
 
@@ -278,9 +313,11 @@ body {
         if((/^(([^<>()\[\]\.,;:\s@\"]+(\.[^<>()\[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$/i.test(inputEmail.value))){
                 $('#inputEmail').removeClass('border-danger');
                 $('#inputEmail').addClass('border-success');
+                hasFailLogin = false;
             }else{
                 $('#inputEmail').removeClass('border-success');
                 $('#inputEmail').addClass('border-danger');
+                hasFailLogin = true;
             }
     });
 
@@ -290,10 +327,57 @@ body {
             if(password2.value==password.value){
                 $('#pass2').removeClass('border-danger');
                 $('#pass2').addClass('border-success');
+                hasFailModal = false;
             }else{
                 $('#pass2').removeClass('border-success');
                 $('#pass2').addClass('border-danger');
+                hasFailModal = true;
             }
+    });
+
+    $( "#newaccModal input" ).change(function() {
+        if($('#pass2').val()!=""&&$('#pass').val()!=""&&$('#email').val()!=""&&$('#name').val()!=""&&$('#surname').val()!=""&&!hasFailModal){
+            $('#vbtn').removeAttr('disabled');
+        }else{
+            $('#vbtn').attr('disabled','disabled');
+        }
+    });
+
+    $( "#newaccModal input" ).focusout(function() {
+        if($('#pass2').val()!=""&&$('#pass').val()!=""&&$('#email').val()!=""&&$('#name').val()!=""&&$('#surname').val()!=""&&!hasFailModal){
+            $('#vbtn').removeAttr('disabled');
+        }else{
+            $('#vbtn').attr('disabled','disabled');
+        }
+    });
+
+    setInterval(function(){
+        if($('#inputPassword').val()!=""&&!hasFailLogin){
+            $('#subb').removeAttr('disabled');
+        }else{
+            $('#subb').attr('disabled','disabled');
+        }
+        if($('#pass2').val()!=""&&$('#pass').val()!=""&&$('#email').val()!=""&&$('#name').val()!=""&&$('#surname').val()!=""&&!hasFailModal){
+            $('#vbtn').removeAttr('disabled');
+        }else{
+            $('#vbtn').attr('disabled','disabled');
+        }
+    },100)
+
+    $( ".form-signin input" ).change(function() {
+        if($('#inputPassword').val()!=""&&!hasFailLogin){
+            $('#subb').removeAttr('disabled');
+        }else{
+            $('#subb').attr('disabled','disabled');
+        }
+    });
+
+    $( ".form-signin input" ).focusout(function() {
+        if($('#inputPassword').val()!=""&&!hasFailLogin){
+            $('#subb').removeAttr('disabled');
+        }else{
+            $('#subb').attr('disabled','disabled');
+        }
     });
 
     password.addEventListener('input', function()
@@ -329,7 +413,7 @@ body {
 
         // Update the text indicator
         if(val !== "") {
-            text.innerHTML = "Complexitatea parolei: " + "<strong>" + strength[result.score] + "</strong>" + "<span class='feedback'>" + result.feedback.warning + " " + result.feedback.suggestions + "</span>"; 
+            text.innerHTML = (scope.selectlang?"Password strength: ":"Complexitatea parolei: ") + "<strong>" + strength[result.score] + "</strong>" + "<span class='feedback'>" + result.feedback.warning + " " + result.feedback.suggestions + "</span>"; 
         }
         else {
             text.innerHTML = "";

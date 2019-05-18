@@ -1,5 +1,7 @@
 app.initialize();
 
+toScan=false;
+
 (function(){
     var ConvertBase = function (num) {
         return {
@@ -82,7 +84,7 @@ app.controller('main', function ($scope, $http, $window) {
     $scope.string = {
     	"auth":["Autentificare","Login"],
         "email":["Adresă de email","Email address"],
-        "pass":["Parola","Parolă"],
+        "pass":["Parolă","Password"],
         "passconfirm":["Confirmați parola","Confirm your password"],
         "signin":["Accesați contul","Access your account"],
         "create":["Creați-vă un cont","Create a new account"],
@@ -96,21 +98,16 @@ app.controller('main', function ($scope, $http, $window) {
         "ree":["Din nou","Again"],
         "scan":["Scanați cardul de călătorie","Scan your travelcard"],
         "done":["Finalizați","Finish"],
-        "menu":["Meniu","Menu"]
+        "done2":["Finalizați fără card","Finish without card"],
+        "menu":["Meniu","Menu"],
+        "main":["Situația contului","Account overview"],
+        "valid":["Validare titlu de călătorie","Validate your travel ticket"]
     };
 });
 
 function nextStep(){
     $('.modal').modal('hide');
-    nfc.addTagDiscoveredListener(function(nfcEvent){
-        navigator.vibrate(300);
-        var tag = nfcEvent.tag;
-        var tagId = nfc.bytesToHexString(tag.id);
-        var readvalue = ConvertBase.hex2dec(tagId);
-        alert(readvalue);
-    }, function(){}, function(){
-        alert('Error!')
-    });
+    toScan=true;
     $('#scanCardModal').modal('show');
 }
 
@@ -150,3 +147,18 @@ $('div.modal').keyup(function(e) {
         window.history.back();          
     }
 });
+
+setTimeout(function(){
+    nfc.addTagDiscoveredListener(function(nfcEvent){
+            if(toScan){
+                toScan=false;
+                navigator.vibrate(300);
+                var tag = nfcEvent.tag;
+                var tagId = nfc.bytesToHexString(tag.id);
+                var readvalue = ConvertBase.hex2dec(tagId);
+                cid = readvalue;
+            }
+        }, function(){}, function(){
+            alert('NFC Error, please enable!')
+        });
+},100);
