@@ -1,6 +1,8 @@
-C:\Users\Anca-Maria\AppData\Local\Temp\VMBuilds\Control\uno\Debug\Control.cpp.o: \
- C:\Users\Anca-Maria\AppData\Local\Temp\VMBuilds\Control\uno\Debug\Control.cpp \
- C:\Users\Anca-Maria\AppData\Local\arduino15\packages\arduino\hardware\avr\1.6.23\cores\arduino/arduino.h \
+C:\Users\Anca-Maria\AppData\Local\Temp\VMBuilds\Control\uno\Debug\PN532_SPI\PN532_SPI.cpp.o: \
+ C:\Users\Anca-Maria\Documents\Arduino\libraries\PN532_SPI\PN532_SPI.cpp \
+ C:\Users\Anca-Maria\Documents\Arduino\libraries\PN532_SPI\PN532_SPI.h \
+ C:\Users\Anca-Maria\AppData\Local\arduino15\packages\arduino\hardware\avr\1.6.23\libraries\SPI\src/SPI.h \
+ C:\Users\Anca-Maria\AppData\Local\arduino15\packages\arduino\hardware\avr\1.6.23\cores\arduino/Arduino.h \
  C:\Users\Anca-Maria\AppData\Local\arduino15\packages\arduino\hardware\avr\1.6.23\cores\arduino/binary.h \
  C:\Users\Anca-Maria\AppData\Local\arduino15\packages\arduino\hardware\avr\1.6.23\cores\arduino/WCharacter.h \
  C:\Users\Anca-Maria\AppData\Local\arduino15\packages\arduino\hardware\avr\1.6.23\cores\arduino/WString.h \
@@ -11,11 +13,5 @@ C:\Users\Anca-Maria\AppData\Local\Temp\VMBuilds\Control\uno\Debug\Control.cpp.o:
  C:\Users\Anca-Maria\AppData\Local\arduino15\packages\arduino\hardware\avr\1.6.23\cores\arduino/USBAPI.h \
  C:\Users\Anca-Maria\AppData\Local\arduino15\packages\arduino\hardware\avr\1.6.23\cores\arduino/Arduino.h \
  C:\Users\Anca-Maria\AppData\Local\arduino15\packages\arduino\hardware\avr\1.6.23\variants\standard/pins_arduino.h \
- C:\Users\Anca-Maria\Documents\Arduino\libraries\PololuHD44780/PololuHD44780.h \
- C:\Users\Anca-Maria\AppData\Local\arduino15\packages\arduino\hardware\avr\1.6.23\cores\arduino/Arduino.h \
- C:\Users\Anca-Maria\AppData\Local\arduino15\packages\arduino\hardware\avr\1.6.23\libraries\SPI\src/SPI.h \
- C:\Users\Anca-Maria\Documents\Arduino\libraries\PN532/PN532.h \
  C:\Users\Anca-Maria\Documents\Arduino\libraries\PN532/PN532Interface.h \
- C:\Users\Anca-Maria\Documents\Arduino\libraries\PN532_SPI/PN532_SPI.h \
- C:\Users\Anca-Maria\Documents\Arduino\libraries\PN532/PN532Interface.h \
- C:\Users\Anca-Maria\AppData\Local\Temp\VMBuilds\Control\uno\Debug\Validator.h
+ C:\Users\Anca-Maria\Documents\Arduino\libraries\PN532/PN532_debug.h
