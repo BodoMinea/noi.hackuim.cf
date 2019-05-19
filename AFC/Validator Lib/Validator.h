@@ -103,13 +103,13 @@ public:
 
 	/*Creates a Pololu HD LCD that resembles a Card Validator*/
 	Validator(uint8_t maxY, uint8_t maxX, uint8_t rs, uint8_t e, uint8_t db4, uint8_t db5,
-		uint8_t db6, uint8_t db7, uint8_t ss, uint8_t mp, uint8_t op, uint8_t bttn1, uint8_t bttn2, uint8_t rx, uint8_t dx) : Display(rs, e, db4, db5, db6, db7), SPIRoot(SPI, ss), CardReader(SPIRoot), Bulb(mp, op), Button1(bttn1), Button2(bttn2), Antenna(rx, dx), nr(0), rows(maxX), columns(maxY) {
+		uint8_t db6, uint8_t db7, uint8_t ss, uint8_t mp, uint8_t op, uint8_t bttn1, uint8_t bttn2, uint8_t rx, uint8_t tx) : Display(rs, e, db4, db5, db6, db7), SPIRoot(SPI, ss), CardReader(SPIRoot), Bulb(mp, op), Button1(bttn1), Button2(bttn2), Antenna(rx, tx), nr(0), rows(maxX), columns(maxY) {
 		pinMode(rx, INPUT);
-		pinMode(dx, OUTPUT);
+		pinMode(tx, OUTPUT);
 	}
 
 	/*Initializez the Validator interface and functions*/
-	void initialize() { Antenna.begin(4800);  Display.init(); displayMessage(IdleMessage); SPI.begin();  CardReader.begin(); CardReader.SAMConfig(); 	CardReader.setPassiveActivationRetries(1); Serial.println("Initialized Validator!"); }
+	void initialize() { Antenna.begin(4800); Antenna.setTimeout(10);  Display.init(); displayMessage(IdleMessage); SPI.begin();  CardReader.begin(); CardReader.SAMConfig(); 	CardReader.setPassiveActivationRetries(1); Serial.println("Initialized Validator!"); }
 
 	/*Clears Display screen*/
 	inline void clearScreen() { Display.clear(); }
@@ -225,18 +225,42 @@ public:
 	/*Attempts to write data on the current card*/
 	bool writeData(uint8_t uid[], uint8_t length, CardData &data) {
 		PN532IO Buffer(CardReader, uid, length);
-
 		bool ok = Buffer.WriteBytes(0, &data, sizeof(data));
 		if (!ok)
 			return false;
 		return true;
 	}
 
+	bool requestData(CardData &data, String uid) {
+		Antenna.stopListening();
+		String Message = uid + ", request";
+		sendMessage(Message);
+		Antenna.listen();
+		uint8_t started = millis() / 1000, current;
+		while (!Antenna.available()) {
+			current = millis() / 1000;
+			if (current - started >= 3)
+				break;
+		}
+		if (!Antenna.available())
+			return false;
+		Antenna.readBytes((char *)&data, sizeof(data));
+		Serial.println(data.Sold);
+		Antenna.stopListening();
+		return true;
+	}
+
+	void sendMessage(String message) {
+		Serial.println(message.c_str());
+		Antenna.stopListening();
+		Antenna.write(message.c_str(), sizeof(message));
+	}
+
 	/*Obtains the last card UID, if existent*/
 	String getStringUID(uint8_t uid[], uint8_t length) const {
 		String UID = "";
 		for (uint8_t i = 0; i < length; i++)
-			UID.concat(uid[i]);
+			UID.concat(String(uid[i], HEX));
 		return UID;
 	}
 
@@ -327,15 +351,17 @@ public:
 				Bulb.setState(LightBulb::IDLE);
 			}
 			else {
-				if (Button1.getState()) {
-					CardData data;
-					bool read = readData(uid, uidLength, data);
-					if (!read) {
-						Serial.println("Failed to read card!");
-						displayMessage(FailureMessage);
-						Bulb.setState(LightBulb::RED);
-					}
-					else {
+				CardData data;
+				bool read = readData(uid, uidLength, data);
+				if (!read) {
+					Serial.println("Failed to read card!");
+					displayMessage(FailureMessage);
+					Bulb.setState(LightBulb::RED);
+				}
+				else {
+					String UID = getStringUID(uid, uidLength);
+					if (Button1.getState()) {
+						Serial.print("Consulting: "); Serial.print(UID); Serial.println("!");
 						if (Button2.getState()) {
 							data.Sold += 10;
 							writeData(uid, uidLength, data);
@@ -346,28 +372,24 @@ public:
 						Message.concat("RON");
 						displayMessage(Message);
 						Bulb.setState(LightBulb::GREEN);
-					}
-					delay(3000);
-					if (CardReader.inListPassiveTarget()) {
-						displayMessage(RetrieveCardMessage);
-						while (CardReader.inListPassiveTarget()) { delay(1000); }
-					}
-					displayMessage(IdleMessage);
-					Bulb.setState(LightBulb::IDLE);
-					Button1.setState(false);
-				}
-				else {
-					String UID = getStringUID(uid, uidLength);
-					//Serial.println(UID);
-					if (!alreadyValidated(UID)) {
-						CardData data;
-						bool read = readData(uid, uidLength, data);
-						if (!read) {
-							Serial.println("Failed to read card!");
-							displayMessage(FailureMessage);
-							Bulb.setState(LightBulb::RED);
+						delay(3000);
+						if (CardReader.inListPassiveTarget()) {
+							displayMessage(RetrieveCardMessage);
+							while (CardReader.inListPassiveTarget()) { delay(1000); }
 						}
-						else {
+						displayMessage(IdleMessage);
+						Bulb.setState(LightBulb::IDLE);
+						Button1.setState(false);
+					}
+					else {
+						if (!alreadyValidated(UID)) {
+							/*CardData dbData = { 0 };
+							bool succes = requestData(dbData, UID);
+							if (false) {
+								Serial.print("Database sold: "); Serial.println(dbData.Sold);
+								if (dbData.Sold < data.Sold)
+									data.Sold = dbData.Sold;
+							}*/
 							Serial.print("Funds: ");  Serial.println(data.Sold);
 							if (data.Sold < RideFare) {
 								displayMessage(InsufficientFundsMessage);
@@ -390,59 +412,68 @@ public:
 									Message.concat("RON");
 									displayMessage(Message);
 									Bulb.setState(LightBulb::GREEN);
+									String AntennaMessage = UID + ", -1.3";
+									sendMessage(AntennaMessage);
 									delay(2000);
 									displayMessage(SuccessMessage);
 								}
 							}
 						}
-					}
-					else {
-						if (!Button2.getState()) {
-							Serial.print("Already registered "); Serial.print(UID); Serial.println("!");
-							displayMessage(RepeatedMessage);
-							Bulb.setState(LightBulb::GREEN);
-						}
 						else {
-							CardData data;
-							bool read = readData(uid, uidLength, data);
-							if (!read) {
-								Serial.println("Failed to read card!");
-								displayMessage(FailureMessage);
-								Bulb.setState(LightBulb::RED);
+							/*CardData dbData = { 0 };
+							bool succes = requestData(dbData, UID);
+							if (false) {
+								Serial.print("Database sold: "); Serial.println(dbData.Sold);
+								if (dbData.Sold < data.Sold)
+									data.Sold = dbData.Sold;
+							}*/
+							if (!Button2.getState()) {
+								Serial.print("Already registered "); Serial.print(UID); Serial.println("!");
+								displayMessage(RepeatedMessage);
+								Bulb.setState(LightBulb::GREEN);
 							}
 							else {
-								data.Sold -= RideFare;
-								bool wrote = writeData(uid, uidLength, data);
-								if (!wrote) {
-									Serial.println("Failed to read card!");
-									displayMessage(FailureMessage);
+								Serial.print("Funds: ");  Serial.println(data.Sold);
+								if (data.Sold < RideFare) {
+									displayMessage(InsufficientFundsMessage);
 									Bulb.setState(LightBulb::RED);
 								}
 								else {
-									Serial.print("Validated "); Serial.print(UID); Serial.println("!");
-									validatedCards[nr++] = UID;
-									String Message;
-									Message.concat("Credit ramas: ");
-									Message.concat(data.Sold);
-									Message.concat("RON");
-									displayMessage(Message);
-									Bulb.setState(LightBulb::GREEN);
-									delay(2000);
-									displayMessage(SuccessMessage);
+									data.Sold -= RideFare;
+									bool wrote = writeData(uid, uidLength, data);
+									if (!wrote) {
+										Serial.println("Failed to read card!");
+										displayMessage(FailureMessage);
+										Bulb.setState(LightBulb::RED);
+									}
+									else {
+										Serial.print("Validated (multiple) "); Serial.print(UID); Serial.println("!");
+										validatedCards[nr++] = UID;
+										String Message;
+										Message.concat("Credit ramas: ");
+										Message.concat(data.Sold);
+										Message.concat("RON");
+										displayMessage(Message);
+										Bulb.setState(LightBulb::GREEN);
+										String AntennaMessage = UID + ", -1.3";
+										sendMessage(AntennaMessage);
+										delay(2000);
+										displayMessage(SuccessMessage);
+									}
 								}
 								Button2.setState(false);
 							}
 						}
 					}
-					delay(2000);
-					if (CardReader.inListPassiveTarget()) {
-						displayMessage(RetrieveCardMessage);
-						while (CardReader.inListPassiveTarget()) { delay(1000); }
-					}
-					displayMessage(IdleMessage);
-					Bulb.setState(LightBulb::IDLE);
 				}
 			}
+			delay(2000);
+			if (CardReader.inListPassiveTarget()) {
+				displayMessage(RetrieveCardMessage);
+				while (CardReader.inListPassiveTarget()) { delay(1000); }
+			}
+			displayMessage(IdleMessage);
+			Bulb.setState(LightBulb::IDLE);
 		}
 	}
 
