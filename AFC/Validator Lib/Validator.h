@@ -5,6 +5,7 @@
 #include <PN532.h>
 #include <PN532_SPI.h>
 #include "PN532IO.h"
+#include <SoftwareSerial.h>
 
 const String WelcomeMessage = "Dani Mocanu va ureaza o zi frumoasa! Multumim ca ati ales DM Trans!";
 const String ReadingMessage = "Se citeste cardul...";
@@ -89,9 +90,10 @@ class Validator {
 
 		void setState(bool state) { Activated = state; }
 	}Button1, Button2;
+	SoftwareSerial Antenna;
 	bool SpecialState;
 	String lastUID;
-	uint32_t validatedCards[50];
+	String validatedCards[4];
 	uint8_t nr, rows, columns;
 	struct CardData {
 		float Sold;
@@ -101,10 +103,13 @@ public:
 
 	/*Creates a Pololu HD LCD that resembles a Card Validator*/
 	Validator(uint8_t maxY, uint8_t maxX, uint8_t rs, uint8_t e, uint8_t db4, uint8_t db5,
-		uint8_t db6, uint8_t db7, uint8_t ss, uint8_t mp, uint8_t op, uint8_t bttn1, uint8_t bttn2) : Display(rs, e, db4, db5, db6, db7), SPIRoot(SPI, ss), CardReader(SPIRoot), Bulb(mp, op), Button1(bttn1), Button2(bttn2), nr(0), rows(maxX), columns(maxY) {}
+		uint8_t db6, uint8_t db7, uint8_t ss, uint8_t mp, uint8_t op, uint8_t bttn1, uint8_t bttn2, uint8_t rx, uint8_t dx) : Display(rs, e, db4, db5, db6, db7), SPIRoot(SPI, ss), CardReader(SPIRoot), Bulb(mp, op), Button1(bttn1), Button2(bttn2), Antenna(rx, dx), nr(0), rows(maxX), columns(maxY) {
+		pinMode(rx, INPUT);
+		pinMode(dx, OUTPUT);
+	}
 
 	/*Initializez the Validator interface and functions*/
-	void initialize() { Display.init(); displayMessage(IdleMessage); SPI.begin();  CardReader.begin(); CardReader.SAMConfig(); 	CardReader.setPassiveActivationRetries(1); Serial.println("Initialized Validator!"); }
+	void initialize() { Antenna.begin(4800);  Display.init(); displayMessage(IdleMessage); SPI.begin();  CardReader.begin(); CardReader.SAMConfig(); 	CardReader.setPassiveActivationRetries(1); Serial.println("Initialized Validator!"); }
 
 	/*Clears Display screen*/
 	inline void clearScreen() { Display.clear(); }
@@ -230,15 +235,13 @@ public:
 	/*Obtains the last card UID, if existent*/
 	String getStringUID(uint8_t uid[], uint8_t length) const {
 		String UID = "";
-		for (uint8_t i = 0; i < length; i++) {
-			UID.concat(String(uid[i] < 0x10 ? " 0" : " "));
-			UID.concat(String(uid[i], HEX));
-		}
+		for (uint8_t i = 0; i < length; i++)
+			UID.concat(uid[i]);
 		return UID;
 	}
 
 	/*Checks whether the UID is already contained*/
-	bool alreadyValidated(uint32_t UID) {
+	bool alreadyValidated(String UID) {
 		displayMessage(ReadingMessage);
 		delay(1500);
 		for (uint8_t i = 0; i < nr; ++i)
@@ -354,7 +357,7 @@ public:
 					Button1.setState(false);
 				}
 				else {
-					uint32_t UID = (uint32_t)atoi((const char*)uid);
+					String UID = getStringUID(uid, uidLength);
 					//Serial.println(UID);
 					if (!alreadyValidated(UID)) {
 						CardData data;

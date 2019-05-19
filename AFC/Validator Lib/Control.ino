@@ -24,10 +24,12 @@
 #include <SPI.h>
 #include <PN532.h>
 #include <PN532_SPI.h>
+#include <SoftwareSerial.h>
+
 #include "Validator.h"
 
-/////////////////Y///X//Rs/E/Db4/Db5/Db6/Db7/ss/mp/op/Btn1/Btn2
-Validator Tester(16, 2, 2, 3, 4, 7, 8, 9, 10, 5, 6, A0, A1);
+/////////////////Y///X//Rs/E/Db4/Db5/Db6/Db7/ss/mp/op/Btn1/Btn2/s1/s2
+Validator Tester(16, 2, 2, 3, 4, 7, 8, 9, 10, 5, 6, A0, A1, A2, A3);
 
 void setup() {
 	Serial.begin(115120);
@@ -38,3 +40,4 @@ void setup() {
 void loop() {
 	Tester.checkReader();
 }
+
