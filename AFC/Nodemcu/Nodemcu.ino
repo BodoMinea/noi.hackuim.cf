@@ -15,7 +15,7 @@ DoubleResetDetect drd(5.0, 0x00);
 WiFiManager wifiManager;
 WiFiClient client;
 
-const char* host = "api.hackuim.cf";
+const char* host = "directapi.hackuim.cf";
 const int httpsPort = 80;
 const char* key = "abcde";
 
@@ -60,19 +60,28 @@ String getValue(String data, char separator, int index)
 }
 
 void sendToServer(String data){
-  String uidSTR=getValue(data, ':', 0);
-  String amountSTR=getValue(data, ':', 1);
+  String uidSTR=getValue(data, ',', 0);
+  String amountSTR=getValue(data, ',', 1);
   if (!client.connect(host, httpsPort)) {
         Serial.println("ERROR: connection failed");
         return;
       }
-  client.print(String("POST /transaction/create HTTP/1.1\r\n") +
-                   "Host: " + host + "\r\n" +
-                   "login-token: "+key+"\r\n" +
-                   "Content-Type: application/x-www-form-urlencoded\r\n"
-                   "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36\r\n" +
-                   "Connection: close\r\n\r\nuid="+uidSTR+"&amount="+amountSTR+"");
- data = "";
+                   
+    String data2 = "uid="+uidSTR+"&amount="+amountSTR;
+
+     Serial.print("Requesting POST: ");
+     client.println("POST /transaction/create HTTP/1.1");
+     client.println("Host: directapi.hackuim.cf");
+     client.println("Accept: */*");
+     client.println("login-token: abcde");
+     client.println("Content-Type: application/x-www-form-urlencoded");
+     client.print("Content-Length: ");
+     client.println(data2.length());
+     client.println();
+     client.print(data2);
+    
+    data = "";
+    
     while (client.connected()) {
         line = client.readStringUntil('\n');
         if (line == "\r") {
@@ -90,11 +99,11 @@ void sendToServer(String data){
 
 void loop() {
   if(mySerial.available()){
-  String tmp = mySerial.readString();
-  Serial.println(tmp);
-    sendToServer(tmp);
-  if (Serial.available()) {
-    Serial.write(Serial.read());
-  }
+    String tmp = mySerial.readString();
+    Serial.println(tmp);
+      sendToServer("3061936775,-1.3");
+    if (Serial.available()) {
+      Serial.write(Serial.read());
+    }
   }
 }
