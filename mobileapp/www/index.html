@@ -23,6 +23,21 @@
     <script type="text/javascript">
     	var authtoken = window.localStorage.getItem("key");
         if(!authtoken){
+        	setTimeout(function(){
+    nfc.addTagDiscoveredListener(function(nfcEvent){
+            if(toScan){
+                toScan=false;
+                navigator.vibrate(300);
+                var tag = nfcEvent.tag;
+                var tagId = nfc.bytesToHexString(tag.id);
+                var readvalue = ConvertBase.hex2dec(tagId);
+                cid = readvalue;
+                sendNewAcc();
+            }
+        }, function(){}, function(){
+            alert('NFC Error, please enable!')
+        });
+},250);
         	window.location.href = 'auth.html';
         }else{
         	window.location.href = 'main.html';

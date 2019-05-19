@@ -8,7 +8,7 @@
     <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width" />
     <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval'; script-src * 'unsafe-inline' 'unsafe-eval'; connect-src * 'unsafe-inline'; img-src * data: blob: 'unsafe-inline'; frame-src *; style-src * 'unsafe-inline';">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js" crossorigin="anonymous"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
 	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slidebars/2.0.2/slidebars.min.css" integrity="sha256-1aPPvkgjcWOgCVC8EECDnKz/PrlQ0kvdb/BXvTS3W60=" crossorigin="anonymous" />
@@ -192,7 +192,7 @@ li .fa {
 
 
 <div canvas="container">
-    <div class="content" style="min-height: 50em">
+    <div class="content" style="min-height: 70em">
         <nav class="navbar navbar-light bg-dark">
   
   <button class="btn btn-sm btn-outline-secondary button js-toggle-main-menu"><i class="fa fa-bars"></i> {{string.menu[selectlang]}}</button>
@@ -204,11 +204,26 @@ li .fa {
     {{string.main[selectlang]}}
   </div>
   <div class="card-body">
-    <h5 class="card-title">a</h5>
-    <p class="card-text">b</p>
+    <h5 class="card-title">{{string.bal[selectlang]}}</h5>
+    <p class="card-text">{{globaldata.balance}} RON</p>
     <a href="#" class="btn btn-primary" onclick="validate();"><i class="fa fa-id-card-o" aria-hidden="true"></i> &nbsp;{{string.valid[selectlang]}}</a>
   </div>
 </div>
+<br>
+<table class="table table-hover">
+    <tr>
+        <th>{{string.dh[selectlang]}}</th>
+        <th>{{string.sum[selectlang]}}</th>
+        <th>Operator</th>
+    </tr>
+    <tr ng-repeat="trs in globaldata.transactions">
+        <td>{{df(trs.timestamp*1000)}}</td>
+        <td ng-if="trs.amount>0" style="color: darkgreen"><b>{{trs.amount}}</b></td>
+        <td ng-if="trs.amount<0" style="color: red"><b>{{trs.amount}}</b></td>
+        <td>{{trs.operator_name}}</td>
+    </tr>
+</table>
+
     </div>    
        
     </div>
@@ -217,9 +232,7 @@ li .fa {
 
 <div off-canvas="main-menu left shift" style="margin-left: -255px; display: block; transition-duration: 300ms; transform: translate(255px, 0px);">
     <ul class="menu small">
-        <li><a href="#"></li>
-        <li><a href="#"></li>
-        <li><a href="#"></li>
+        <li><a href="javascript: logout()"><i class="fa fa-sign-out" aria-hidden="true"></i> Logout</li>
         <li><center style="color: white;"><b><span onclick="changelang('RO')">RO</span> / <span onclick="changelang('EN')">EN</span></b></center></li>
     </ul>
 </div>
@@ -262,6 +275,28 @@ li .fa {
         controller.toggle( 'main-menu' );
     } );
 
+    function logout(){
+        $.ajax({method:'POST', url:'https://api.hackuim.cf/user/logout', beforeSend: function(xhr){
+            xhr.setRequestHeader('login-token', localStorage.getItem('key'));
+        },success: function(data){
+            localStorage.removeItem('key');
+            window.location.href = 'auth.html';
+        }}) 
+    }
+
+    function refresh(){
+           $.ajax({url:'https://api.hackuim.cf/user/money', beforeSend: function(xhr){
+            xhr.setRequestHeader('login-token', localStorage.getItem('key'));
+        },success: function(data){
+            console.log(data);
+            scope.$apply(function(){
+                scope.globaldata = data;
+            });
+            setTimeout(function(){ refresh() },1500);
+        }}) 
+    }
+
+    refresh();     
 
     </script>
 </body>

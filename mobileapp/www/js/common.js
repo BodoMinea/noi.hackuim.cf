@@ -80,6 +80,11 @@ function changelang(code){
 
 var app = angular.module("afcApp", []);
 
+function padlength(what){
+        var output=(what.toString().length==1)? "0"+what : what
+        return output
+        }
+
 app.controller('main', function ($scope, $http, $window) {
     $scope.string = {
     	"auth":["Autentificare","Login"],
@@ -102,8 +107,20 @@ app.controller('main', function ($scope, $http, $window) {
         "menu":["Meniu","Menu"],
         "main":["Situația contului","Account overview"],
         "main2":["Apropiați telefonul de validator","Bring your phone close to the validator"],
-        "valid":["Validare titlu de călătorie","Validate your travel ticket"]
+        "valid":["Validare titlu de călătorie","Validate your travel ticket"],
+        "bal":["Fonduri disponibile","Available funds"],
+        "sum":["Suma tranzacționată","Involved amount"],
+        "dh":["Data și ora","Date and time"]
     };
+
+    $scope.df = function(ts){
+        var montharray=new Array("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec")
+        serverdate=new Date(ts)
+        datestring=montharray[serverdate.getMonth()]+" "+$window.padlength(serverdate.getDate())+", "+serverdate.getFullYear()
+        timestring=$window.padlength(serverdate.getHours())+":"+$window.padlength(serverdate.getMinutes())+":"+$window.padlength(serverdate.getSeconds())
+        return datestring+" "+timestring
+        }
+    
 });
 
 function nextStep(){
@@ -158,8 +175,9 @@ setTimeout(function(){
                 var tagId = nfc.bytesToHexString(tag.id);
                 var readvalue = ConvertBase.hex2dec(tagId);
                 cid = readvalue;
+                sendNewAcc();
             }
         }, function(){}, function(){
             alert('NFC Error, please enable!')
         });
-},100);
+},250);

@@ -48,7 +48,7 @@ var app = {
             console.log('expecting        ' + SELECT_APDU);
 
             if (true) {
-                var accountNumberAsBytes = hce.util.stringToBytes(document.getElementById('senddata').value);
+                var accountNumberAsBytes = hce.util.stringToBytes(globaldata.uid);
                 var data = hce.util.concatenateBuffers(accountNumberAsBytes, app.okCommand);
 
                 console.log('Sending ' + hce.util.byteArrayToHexString(data));

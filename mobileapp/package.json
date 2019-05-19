@@ -18,12 +18,12 @@
       "cordova-plugin-inappbrowser": {},
       "cordova-plugin-network-information": {},
       "cordova-plugin-vibration": {},
-      "cordova-plugin-hce": {
-        "AID_FILTER": "F0010203040506"
-      },
       "cordova-plugin-whitelist": {},
       "com.cordova.plugins.cookiemaster": {},
-      "phonegap-nfc": {}
+      "phonegap-nfc": {},
+      "cordova-plugin-hce": {
+        "AID_FILTER": "F0010203040506"
+      }
     }
   },
   "dependencies": {

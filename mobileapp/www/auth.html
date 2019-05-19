@@ -8,7 +8,7 @@
     <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width" />
     <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval'; script-src * 'unsafe-inline' 'unsafe-eval'; connect-src * 'unsafe-inline'; img-src * data: blob: 'unsafe-inline'; frame-src *; style-src * 'unsafe-inline';">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js" crossorigin="anonymous"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
 	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
     <script type="text/javascript" src="https://static.flash-its.eu/assets/angular.js"></script>
@@ -200,6 +200,10 @@ body {
     <label for="exampleFormControlInput1">{{string.passconfirm[selectlang]}}</label>
     <input type="password" class="form-control" id="pass2" placeholder="{{string.ree[selectlang]}}">
   </div>
+  <div class="form-group">
+    <label for="exampleFormControlInput1">CNP</label>
+    <input type="number" class="form-control" id="cnp" placeholder="CNP">
+  </div>
 </form>
       </div>
       <div class="modal-footer">
@@ -234,12 +238,12 @@ body {
 <script type="text/javascript">
 
     function sendAuth(){
-        $.post('https://api.hackuim.cf/authenticate',{ 
+        $.post('https://api.hackuim.cf/user/login',{ 
             email: $('#inputEmail').val(),
             password: $('#inputPassword').val()
         },function(response){
-            if(response.success) {
-                window.localStorage.setItem("key",response.token);
+            if(response.status) {
+                window.localStorage.setItem("key",response.login_token);
                 window.location.href = 'main.html';
             }
         })
@@ -248,15 +252,16 @@ body {
     cid=null;
 
     function sendNewAcc(){
-        $.post('https://api.hackuim.cf/signup',{ 
-            username: $('#email').val(),
+        $.post('https://api.hackuim.cf/user/register',{ 
+            email: $('#email').val(),
             password: $('#pass').val(),
             name: $('#nameinp').val(),
             surname: $('#surname').val(),
+            cnp: $('#cnp').val(),
             card_id: cid
         },function(response){
-            if(response.success) {
-                window.localStorage.setItem("key",response.token);
+            if(response.status=='success') {
+                window.localStorage.setItem("key",response.login_token);
                 window.location.href = 'main.html';
             }
         })
@@ -265,6 +270,7 @@ body {
     var hasFailModal = true, hasFailLogin = true;
     var password = document.getElementById('pass');
     var password2 = document.getElementById('pass2');
+    var cnp = document.getElementById('cnp');
     var email = document.getElementById('email');
     var inputEmail = document.getElementById('inputEmail');
     var text = document.getElementById('password-strength');
@@ -308,6 +314,19 @@ body {
             }
     });
 
+    cnp.addEventListener('input', function()
+    {
+        if(validCNP(cnp.value)){
+                $('#cnp').removeClass('border-danger');
+                $('#cnp').addClass('border-success');
+                hasFailModal = false;
+            }else{
+                $('#cnp').removeClass('border-success');
+                $('#cnp').addClass('border-danger');
+                hasFailModal = true;
+            }
+    });
+
     inputEmail.addEventListener('input', function()
     {
         if((/^(([^<>()\[\]\.,;:\s@\"]+(\.[^<>()\[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$/i.test(inputEmail.value))){
@@ -336,7 +355,7 @@ body {
     });
 
     $( "#newaccModal input" ).change(function() {
-        if($('#pass2').val()!=""&&$('#pass').val()!=""&&$('#email').val()!=""&&$('#name').val()!=""&&$('#surname').val()!=""&&!hasFailModal){
+        if($('#pass2').val()!=""&&$('#pass').val()!=""&&$('#email').val()!=""&&$('#name').val()!=""&&$('#surname').val()!=""&&$('#cnp').val()!=""&&!hasFailModal){
             $('#vbtn').removeAttr('disabled');
         }else{
             $('#vbtn').attr('disabled','disabled');
@@ -344,12 +363,34 @@ body {
     });
 
     $( "#newaccModal input" ).focusout(function() {
-        if($('#pass2').val()!=""&&$('#pass').val()!=""&&$('#email').val()!=""&&$('#name').val()!=""&&$('#surname').val()!=""&&!hasFailModal){
+        if($('#pass2').val()!=""&&$('#pass').val()!=""&&$('#email').val()!=""&&$('#name').val()!=""&&$('#surname').val()!=""&&$('#cnp').val()!=""&&!hasFailModal){
             $('#vbtn').removeAttr('disabled');
         }else{
             $('#vbtn').attr('disabled','disabled');
         }
     });
+
+    function validCNP( p_cnp ) {
+        var i=0 , year=0 , hashResult=0 , cnp=[] , hashTable=[2,7,9,1,4,6,3,5,8,2,7,9];
+        if( p_cnp.length !== 13 ) { return false; }
+        for( i=0 ; i<13 ; i++ ) {
+            cnp[i] = parseInt( p_cnp.charAt(i) , 10 );
+            if( isNaN( cnp[i] ) ) { return false; }
+            if( i < 12 ) { hashResult = hashResult + ( cnp[i] * hashTable[i] ); }
+        }
+        hashResult = hashResult % 11;
+        if( hashResult === 10 ) { hashResult = 1; }
+        year = (cnp[1]*10)+cnp[2];
+        switch( cnp[0] ) {
+            case 1  : case 2 : { year += 1900; } break;
+            case 3  : case 4 : { year += 1800; } break;
+            case 5  : case 6 : { year += 2000; } break;
+            case 7  : case 8 : case 9 : { year += 2000; if( year > ( parseInt( new Date().getYear() , 10 ) - 14 ) ) { year -= 100; } } break;
+            default : { return false; }
+        }
+        if( year < 1800 || year > 2099 ) { return false; }
+        return ( cnp[12] === hashResult );
+    }
 
     setInterval(function(){
         if($('#inputPassword').val()!=""&&!hasFailLogin){
